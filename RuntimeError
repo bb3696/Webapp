@@ -1,0 +1,20 @@
+# RuntimeError: Event loop is closed
+# 自语的核桃说的正解，按照她的思路，
+# 在orm中create_pool后面添加 
+async def destory_pool(): 
+    global pool 
+    if pool is not None : 
+    pool.close() 
+    await pool.wait_closed() 
+# 然后在test.py里面加上destory_pool就解决了,如下: 
+
+async def test(loop,**kw): 
+    await orm.create_pool(loop=loop,user='www-data', password='www-data', db='awesome') 
+    u = User(name=kw.get('name'), email=kw.get('email'), passwd=kw.get('passwd'), image=kw.get('image')) 
+    await u.save() 
+    await orm.destory_pool()
+
+    data=dict(name='gaf', email='235123345@qq.com', passwd='1312345', image='about:blank') 
+    loop=asyncio.get_event_loop() 
+    loop.run_until_complete(test(loop,**data)) 
+    loop.close()
